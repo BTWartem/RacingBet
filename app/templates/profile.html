@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль пользователя{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="card-title mb-3">Профиль {{ user.username }}</h2>
+            <div class="alert alert-info">
+                <h5 class="mb-0">Баланс: {{ "%.2f"|format(user.balance) }} ₽</h5>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row text-center mb-3">
+                <div class="col-md-3">
+                    <div class="card border-primary">
+                        <div class="card-body">
+                            <h5>Всего ставок</h5>
+                            <p class="display-6">{{ all_bets|length }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h5>Выиграно</h5>
+                            <p class="display-6 text-success">
+                                {{ all_bets|selectattr('status', 'equalto', 'won')|list|length }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-danger">
+                        <div class="card-body">
+                            <h5>Проиграно</h5>
+                            <p class="display-6 text-danger">
+                                {{ all_bets|selectattr('status', 'equalto', 'lost')|list|length }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <h5>Активные</h5>
+                            <p class="display-6 text-warning">
+                                {{ all_bets|selectattr('status', 'equalto', 'active')|list|length }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group w-100 mb-3" role="group">
+                <a href="?filter=all" class="btn btn-outline-secondary {% if status_filter == 'all' %}active{% endif %}">Все</a>
+                <a href="?filter=won" class="btn btn-outline-success {% if status_filter == 'won' %}active{% endif %}">Выигрыши</a>
+                <a href="?filter=lost" class="btn btn-outline-danger {% if status_filter == 'lost' %}active{% endif %}">Проигрыши</a>
+                <a href="?filter=active" class="btn btn-outline-warning {% if status_filter == 'active' %}active{% endif %}">Активные</a>
+            </div>
+
+            <h4 class="mb-3">
+                {% if status_filter == 'all' %}
+                    Все ставки
+                {% elif status_filter == 'won' %}
+                    Выигранные ставки
+                {% elif status_filter == 'lost' %}
+                    Проигранные ставки
+                {% else %}
+                    Активные ставки
+                {% endif %}
+                ({{ bets|length }})
+            </h4>
+
+            {% if bets %}
+                <div class="list-group">
+                    {% for bet in bets %}
+                    <div class="list-group-item {% if bet.status == 'won' %}list-group-item-success{% elif bet.status == 'lost' %}list-group-item-danger{% else %}list-group-item-warning{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="mb-1">{{ bet.race.name }}</h5>
+                                <p class="mb-1">
+                                    Ставка: <strong>{{ "%.2f"|format(bet.amount) }} ₽</strong> на
+                                    <strong>{{ bet.race.participant1 if bet.selected_participant == 1 else bet.race.participant2 }}</strong>
+                                </p>
+                                <p class="mb-1">
+                                    Коэффициент: <strong>{{ bet.race.coefficient1 if bet.selected_participant == 1 else bet.race.coefficient2 }}</strong>
+                                </p>
+                                {% if bet.status == 'active' %}
+                                    <p class="mb-0">
+                                        Потенциальный выигрыш: <strong>{{ "%.2f"|format(bet.amount * (bet.race.coefficient1 if bet.selected_participant == 1 else bet.race.coefficient2)) }} ₽</strong>
+                                    </p>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">{{ bet.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                                <div class="mt-2">
+                                    <span class="badge bg-{% if bet.status == 'won' %}success{% elif bet.status == 'lost' %}danger{% else %}warning{% endif %}">
+                                        {% if bet.status == 'won' %}
+                                            Выигрыш: +{{ "%.2f"|format(bet.amount * (bet.race.coefficient1 if bet.selected_participant == 1 else bet.race.coefficient2)) }} ₽
+                                        {% elif bet.status == 'lost' %}
+                                            Проигрыш
+                                        {% else %}
+                                            В процессе
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">Нет ставок</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block title %}Пополнение баланса{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Пополнение баланса</h4>
+                </div>
+                <div class="card-body">
+                    <h5>Пользователь: {{ user.username }}</h5>
+                    <p>Текущий баланс: <strong>{{ "%.2f"|format(user.balance) }} ₽</strong></p>
+                    
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        {{ render_field(form.amount) }}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus-circle me-2"></i>Пополнить
+                            </button>
+                            <a href="{{ url_for('main.admin_users') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Назад
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Управление пользователями{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="fas fa-users me-2"></i>Управление пользователями</h4>
+                <a href="{{ url_for('main.admin') }}" class="btn btn-light">
+                    <i class="fas fa-arrow-left me-1"></i> Назад
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="mb-4">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="Поиск по имени"
+                           value="{{ request.args.get('search', '') }}">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search me-1"></i> Найти
+                    </button>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Логин</th>
+                            <th>Статус</th>
+                            <th>Баланс</th>
+                            <th>Ставок</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>
+                                {% if user.is_admin %}
+                                    <span class="badge bg-danger">Админ</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Пользователь</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ "%.2f"|format(user.balance) }} ₽</td>
+                            <td>{{ user.bets|length }}</td>
+                            <td>
+                                <a href="{{ url_for('main.admin_deposit', user_id=user.id) }}"
+                                   class="btn btn-sm btn-success" title="Пополнить баланс">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </a>
+                                <button class="btn btn-sm btn-info" data-bs-toggle="modal"
+                                        data-bs-target="#userModal{{ user.id }}" title="Подробнее">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% for user in users %}
+<!-- Модальные окна для каждого пользователя -->
+<div class="modal fade" id="userModal{{ user.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ставки пользователя {{ user.username }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% if user.bets %}
+                    <div class="list-group">
+                        {% for bet in user.bets %}
+                        <div class="list-group-item mb-2 {% if bet.status == 'won' %}list-group-item-success{% elif bet.status == 'lost' %}list-group-item-danger{% else %}list-group-item-warning{% endif %}">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ bet.race.name }}</strong>
+                                <span>{{ bet.created_at.strftime('%d.%m.%Y') }}</span>
+                            </div>
+                            <div>Ставка: {{ bet.amount }} ₽ на {{ bet.race.participant1 if bet.selected_participant == 1 else bet.race.participant2 }}</div>
+                            <div>
+                                Статус:
+                                <span class="badge bg-{% if bet.status == 'won' %}success{% elif bet.status == 'lost' %}danger{% else %}warning{% endif %}">
+                                    {% if bet.status == 'won' %}
+                                        Выигрыш (+{{ (bet.amount * (bet.race.coefficient1 if bet.selected_participant == 1 else bet.race.coefficient2))|round(2) }} ₽)
+                                    {% elif bet.status == 'lost' %}
+                                        Проигрыш
+                                    {% else %}
+                                        Активная
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">У пользователя нет ставок</div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

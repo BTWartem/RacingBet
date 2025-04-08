@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Ставки пользователя {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fas fa-user me-2"></i>Ставки пользователя: {{ user.username }}</h4>
+            <a href="{{ url_for('admin_users') }}" class="btn btn-light btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Назад
+            </a>
+        </div>
+        
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="card border-primary">
+                        <div class="card-body">
+                            <h5 class="card-title">Баланс</h5>
+                            <p class="display-6">{{ "%.2f"|format(user.balance) }} ₽</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h5 class="card-title">Всего ставок</h5>
+                            <p class="display-6">{{ bets|length }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-info">
+                        <div class="card-body">
+                            <h5 class="card-title">ID пользователя</h5>
+                            <p class="display-6">{{ user.id }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mb-3">История ставок:</h5>
+            {% if bets %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Заезд</th>
+                            <th>Дата</th>
+                            <th>Сумма</th>
+                            <th>Участник</th>
+                            <th>Коэф.</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bet in bets %}
+                        <tr>
+                            <td>{{ bet.race.name }}</td>
+                            <td>{{ bet.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td>{{ "%.2f"|format(bet.amount) }} ₽</td>
+                            <td>
+                                {{ bet.race.participant1 if bet.selected_participant == 1 else bet.race.participant2 }}
+                            </td>
+                            <td>
+                                {{ bet.race.coefficient1 if bet.selected_participant == 1 else bet.race.coefficient2 }}
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if bet.status == 'won' %}success{% elif bet.status == 'lost' %}danger{% else %}warning{% endif %}">
+                                    {% if bet.status == 'won' %}
+                                        Выигрыш
+                                    {% elif bet.status == 'lost' %}
+                                        Проигрыш
+                                    {% else %}
+                                        Активна
+                                    {% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">Пользователь еще не делал ставок</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
